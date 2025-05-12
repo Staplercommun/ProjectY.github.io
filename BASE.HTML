@@ -1,0 +1,101 @@
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Влияние компьютерных игр</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <div id="device-modal" class="overlay">
+    <div class="modal">
+      <h2>Вы находитесь на устройстве:</h2>
+      <button id="device-pc">ПК</button>
+      <button id="device-phone">Телефон</button>
+    </div>
+  </div>
+  <header>
+    <h1>Влияние компьютерных игр</h1>
+    <div>
+      <button id="theme-toggle">Тёмная тема</button>
+      <nav>
+        <a href="base.html">Главная</a>
+        <a href="info.html">Инфо</a>
+        <a href="advice.html">Советы</a>
+        <a href="test.html">Тест</a>
+        <a href="game.html">Игра</a>
+        <a href="infographic.html">Инфографика</a>
+        <a href="break.html">Перерыв</a>
+        <a href="profile.html" id="profile-link">Профиль</a>
+        <a href="login.html" id="login-link">Войти</a>
+        <a href="register.html" id="register-link">Регистрация</a>
+      </nav>
+    </div>
+  </header>
+  <main class="main-container">
+    <h2>Добро пожаловать!</h2>
+    <p>Изучите информацию о влиянии компьютерных игр и узнайте, как защитить своё здоровье.</p>
+    <img src="assets/CG.png" alt="Компьютерные игры" style="width:100%;border-radius:10px;"/>
+  </main>
+  <div class="notification-container" id="notification-container"></div>
+  <footer>© 2025 ST. Все права защищены. Тахир</footer>
+  <script>
+    // Device modal logic
+    if(!sessionStorage.getItem('device')) {
+      document.getElementById('device-modal').style.display = 'flex';
+      document.getElementById('device-pc').onclick = () => { sessionStorage.setItem('device','pc'); document.getElementById('device-modal').style.display = 'none'; };
+      document.getElementById('device-phone').onclick = () => { sessionStorage.setItem('device','phone'); document.getElementById('device-modal').style.display = 'none'; document.body.classList.add('mobile'); };
+    } else if(sessionStorage.getItem('device')==='phone') {
+      document.body.classList.add('mobile');
+      document.getElementById('device-modal').style.display = 'none';
+    } else {
+      document.getElementById('device-modal').style.display = 'none';
+    }
+    // Theme toggle
+    const toggle = document.getElementById('theme-toggle');
+    const currentTheme = localStorage.getItem('theme') || 'light';
+    document.body.classList.add(currentTheme);
+    toggle.textContent = currentTheme==='light'? 'Тёмная тема':'Светлая тема';
+    toggle.onclick = () => {
+      const newTheme = document.body.classList.contains('light') ? 'dark' : 'light';
+      document.body.classList.replace(document.body.classList.contains('light') ? 'light' : 'dark', newTheme);
+      localStorage.setItem('theme', newTheme);
+      toggle.textContent = newTheme==='light'? 'Тёмная тема':'Светлая тема';
+    };
+    // Nav links visibility
+    const currentUser = localStorage.getItem('currentUser');
+    if(currentUser) {
+      document.getElementById('login-link').style.display = 'none';
+      document.getElementById('register-link').style.display = 'none';
+    }
+    // Notification system
+    const adviceList = [
+      'Делайте перерывы каждый час игры для разминки и отдыха.',
+      'Выполняйте гимнастику для глаз: смотрите вдаль, делайте круговые движения.',
+      'Ограничьте время игры до 1–2 часов в день.',
+      'Настройте эргономику: монитор на уровне глаз, кресло с поддержкой спины.',
+      'Обеспечьте равномерное освещение без бликов.',
+      'Добавьте физическую активность: прогулки и упражнения укрепляют здоровье.'
+    ];
+    function showNotification(message) {
+      if(localStorage.getItem('notifications')==='disabled') return;
+      const container = document.getElementById('notification-container');
+      const notif = document.createElement('div');
+      notif.className = 'notification';
+      notif.innerHTML = `<span>${message}</span><button onclick="this.parentElement.remove()">✖</button>`;
+      container.appendChild(notif);
+      setTimeout(() => notif.remove(), 5000);
+    }
+    const users = JSON.parse(localStorage.getItem('users') || '[]');
+    const user = users.find(u => u.email === currentUser);
+    if (user && user.subscribed) {
+      setInterval(() => {
+        const randomAdvice = adviceList[Math.floor(Math.random() * adviceList.length)];
+        showNotification(`Совет: ${randomAdvice}`);
+      }, 60000);
+    }
+    setTimeout(() => showNotification('Новость: Скоро новый ивент!'), 5000);
+    setTimeout(() => showNotification('ЛС: Привет, как дела?'), 10000);
+  </script>
+</body>
+</html>

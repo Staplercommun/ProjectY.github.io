@@ -1,0 +1,236 @@
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Перерыв</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      overflow: hidden;
+    }
+    .video-background {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      z-index: -1;
+    }
+    .overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: -1;
+    }
+    .main-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      color: #fff;
+      text-align: center;
+      padding: 20px;
+      position: relative;
+      z-index: 1;
+    }
+    .break-timer {
+      font-size: 3rem;
+      margin: 20px 0;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 1.2rem;
+      cursor: pointer;
+      border: none;
+      border-radius: 5px;
+      background: #6200ea;
+      color: #fff;
+      margin: 10px;
+      transition: background 0.3s;
+    }
+    button:hover {
+      background: #3700b3;
+    }
+    .light button {
+      background: #03dac6;
+      color: #000;
+    }
+    .light button:hover {
+      background: #018786;
+    }
+    .light .main-container {
+      color: #000;
+    }
+    .light .break-timer {
+      text-shadow: 2px 2px 4px rgba(255, 255, 255, 0.7);
+    }
+    .notification-container {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      z-index: 1000;
+    }
+    .notification {
+      background: #6200ea;
+      color: #fff;
+      padding: 10px;
+      margin: 5px;
+      border-radius: 5px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .light .notification {
+      background: #03dac6;
+      color: #000;
+    }
+    @media (max-width: 600px) {
+      .break-timer {
+        font-size: 2rem;
+      }
+      button {
+        font-size: 1rem;
+        padding: 8px 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <video class="video-background" autoplay muted loop playsinline poster="nature-fallback.jpg">
+    <source src="Calm nature.mp4" type="video/mp4">
+    <img src="nature-fallback.jpg" alt="Nature fallback">
+  </video>
+  <div class="overlay"></div>
+  <header>
+    <h1>Перерыв</h1>
+    <div>
+      <button id="theme-toggle">Тёмная тема</button>
+      <nav>
+        <a href="base.html">Главная</a>
+        <a href="info.html">Инфо</a>
+        <a href="advice.html">Советы</a>
+        <a href="test.html">Тест</a>
+        <a href="game.html">Игра</a>
+        <a href="infographic.html">Инфографика</a>
+        <a href="break.html">Перерыв</a>
+        <a href="profile.html" id="profile-link">Профиль</a>
+        <a href="login.html" id="login-link">Войти</a>
+        <a href="register.html" id="register-link">Регистрация</a>
+      </nav>
+    </div>
+  </header>
+  <main class="main-container">
+    <h2>Сделай перерыв, бро! 😎</h2>
+    <p>Расслабься, подыши, разомнись. Настрой таймер и чиль!</p>
+    <div class="break-timer" id="timer">05:00</div>
+    <button id="start-timer">Старт</button>
+    <button id="reset-timer">Сброс</button>
+    <button id="toggle-background">Отключить фон</button>
+  </main>
+  <div class="notification-container" id="notification-container"></div>
+  <footer>© 2025 ST. Все права защищены. Тахир</footer>
+  <script>
+    // Theme & Nav
+    const toggle = document.getElementById('theme-toggle');
+    const currentTheme = localStorage.getItem('theme') || 'light';
+    document.body.classList.add(currentTheme);
+    toggle.textContent = currentTheme === 'light' ? 'Тёмная тема' : 'Светлая тема';
+    toggle.onclick = () => {
+      const newTheme = document.body.classList.contains('light') ? 'dark' : 'light';
+      document.body.classList.replace(document.body.classList.contains('light') ? 'light' : 'dark', newTheme);
+      localStorage.setItem('theme', newTheme);
+      toggle.textContent = newTheme === 'light' ? 'Тёмная тема' : 'Светлая тема';
+    };
+    const currentUser = localStorage.getItem('currentUser');
+    if (currentUser) {
+      document.getElementById('login-link').style.display = 'none';
+      document.getElementById('register-link').style.display = 'none';
+    }
+    // Notification system
+    const adviceList = [
+      'Делайте перерывы каждый час игры для разминки и отдыха.',
+      'Выполняйте гимнастику для глаз: смотрите вдаль, делайте круговые движения.',
+      'Ограничьте время игры до 1–2 часов в день.',
+      'Настройте эргономику: монитор на уровне глаз, кресло с поддержкой спины.',
+      'Обеспечьте равномерное освещение без бликов.',
+      'Добавьте физическую активность: прогулки и упражнения укрепляют здоровье.'
+    ];
+    function showNotification(message) {
+      if (localStorage.getItem('notifications') === 'disabled') return;
+      const container = document.getElementById('notification-container');
+      const notif = document.createElement('div');
+      notif.className = 'notification';
+      notif.innerHTML = `<span>${message}</span><button onclick="this.parentElement.remove()">✖</button>`;
+      container.appendChild(notif);
+      setTimeout(() => notif.remove(), 5000);
+    }
+    const users = JSON.parse(localStorage.getItem('users') || '[]');
+    const user = users.find(u => u.email === currentUser);
+    if (user && user.subscribed) {
+      setInterval(() => {
+        const randomAdvice = adviceList[Math.floor(Math.random() * adviceList.length)];
+        showNotification(`Совет: ${randomAdvice}`);
+      }, 60000);
+    }
+    setTimeout(() => showNotification('Новость: Скоро новый ивент!'), 5000);
+    setTimeout(() => showNotification('ЛС: Привет, как дела?'), 10000);
+    // Timer
+    const timerDisplay = document.getElementById('timer');
+    const startBtn = document.getElementById('start-timer');
+    const resetBtn = document.getElementById('reset-timer');
+    let timerInterval;
+    let timeLeft = 300;
+    function updateTimer() {
+      const minutes = Math.floor(timeLeft / 60);
+      const seconds = timeLeft % 60;
+      timerDisplay.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+      if (timeLeft <= 0) {
+        clearInterval(timerInterval);
+        showNotification('Перерыв окончен! Пора гриндить! 😎');
+        startBtn.textContent = 'Старт';
+        timeLeft = 300;
+        updateTimer();
+      }
+      timeLeft--;
+    }
+    startBtn.onclick = () => {
+      if (startBtn.textContent === 'Старт') {
+        timerInterval = setInterval(updateTimer, 1000);
+        startBtn.textContent = 'Пауза';
+      } else {
+        clearInterval(timerInterval);
+        startBtn.textContent = 'Старт';
+      }
+    };
+    resetBtn.onclick = () => {
+      clearInterval(timerInterval);
+      timeLeft = 300;
+      updateTimer();
+      startBtn.textContent = 'Старт';
+    };
+    // Background toggle
+    const video = document.querySelector('.video-background');
+    const overlay = document.querySelector('.overlay');
+    const toggleBgBtn = document.getElementById('toggle-background');
+    toggleBgBtn.onclick = () => {
+      if (video.style.display === 'none') {
+        video.style.display = 'block';
+        overlay.style.display = 'block';
+        toggleBgBtn.textContent = 'Отключить фон';
+      } else {
+        video.style.display = 'none';
+        overlay.style.display = 'none';
+        toggleBgBtn.textContent = 'Включить фон';
+      }
+    };
+  </script>
+</body>
+</html>

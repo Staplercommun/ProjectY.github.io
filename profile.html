@@ -1,0 +1,181 @@
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Профиль</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header>
+    <h1>Профиль</h1>
+    <div>
+      <button id="theme-toggle">Тёмная тема</button>
+      <nav>
+        <a href="base.html">Главная</a>
+        <a href="info.html">Инфо</a>
+        <a href="advice.html">Советы</a>
+        <a href="test.html">Тест</a>
+        <a href="game.html">Игра</a>
+        <a href="infographic.html">Инфографика</a>
+        <a href="break.html">Перерыв</a>
+        <a href="profile.html">Профиль</a>
+        <a href="login.html" id="login-link">Войти</a>
+        <a href="register.html" id="register-link">Регистрация</a>
+      </nav>
+    </div>
+  </header>
+  <div class="profile-container">
+    <h2>Добро пожаловать, <span id="user-nick"></span></h2>
+    <h3>Настройки</h3>
+    <label><input type="checkbox" id="sub-toggle"> Подписка на лайфхаки</label>
+    <p id="sub-msg"></p>
+    <label><input type="checkbox" id="notif-toggle"> Включить уведомления</label>
+    <p id="notif-msg"></p>
+    <h3>Статистика активности</h3>
+    <div class="stats-list" id="stats"></div>
+    <h3>Достижения</h3>
+    <div class="achievements-list" id="achievements"></div>
+    <h3>История тестов</h3>
+    <ul id="results-list"></ul>
+    <h3>Здоровые перерывы за неделю: <span id="break-count"></span></h3>
+    <h3>Общее время перерывов: <span id="break-time"></span> минут</h3>
+    <h3>Лидерборд</h3>
+    <ol id="leaderboard"></ol>
+    <button id="logout-btn">Выйти</button>
+  </div>
+  <div class="notification-container" id="notification-container"></div>
+  <footer>© 2025 ST. Все права защищены. Тахир</footer>
+  <script>
+    // Theme & Nav visibility
+    const toggle=document.getElementById('theme-toggle'),theme=localStorage.getItem('theme')||'light';document.body.classList.add(theme);toggle.textContent=theme==='light'?'Тёмная тема':'Светлая тема';toggle.onclick=()=>{const nt=document.body.classList.contains('light')?'dark':'light';document.body.classList.replace(document.body.classList.contains('light')?'light':'dark',nt);localStorage.setItem('theme',nt);toggle.textContent=nt==='light'?'Тёмная тема':'Светлая тема';};document.getElementById('login-link').style.display='none';document.getElementById('register-link').style.display='none';
+    // Load user data
+    const users=JSON.parse(localStorage.getItem('users')||'[]'), curr=localStorage.getItem('currentUser');
+    if(!curr) location='login.html';
+    const user=users.find(u=>u.email===curr);
+    document.getElementById('user-nick').textContent=user.nickname;
+    document.getElementById('break-count').textContent=user.breaks;
+    document.getElementById('break-time').textContent=user.breakTime || 0;
+    const rl=document.getElementById('results-list'); user.results.forEach(r=>{const li=document.createElement('li');li.textContent=r;rl.append(li);});
+    const lb=document.getElementById('leaderboard'); users.sort((a,b)=>b.breaks-a.breaks).forEach(u=>{const li=document.createElement('li');li.textContent=`${u.nickname}: ${u.breaks}`;lb.append(li);});
+    // Subscription toggle
+    const st=document.getElementById('sub-toggle'), sm=document.getElementById('sub-msg'); 
+    st.checked=user.subscribed; 
+    st.onchange=()=>{user.subscribed=st.checked;localStorage.setItem('users',JSON.stringify(users)); sm.textContent=st.checked?'Подписка активна':'Подписка отключена';};
+    // Notification toggle
+    const nt=document.getElementById('notif-toggle'), nm=document.getElementById('notif-msg');
+    nt.checked=localStorage.getItem('notifications')!=='disabled';
+    nm.textContent=nt.checked?'Уведомления включены':'Уведомления отключены';
+    nt.onchange=()=>{
+      localStorage.setItem('notifications', nt.checked ? 'enabled' : 'disabled');
+      nm.textContent=nt.checked?'Уведомления включены':'Уведомления отключены';
+    };
+    // Stats
+    const gameTime = (user.gameTime || 0) / 60;
+    const breaks = user.breaks || 0;
+    const breakTime = user.breakTime || 0;
+    const avgRisk = user.results.length ? (user.results.map(r => parseInt(r.split(': ')[1])).reduce((a, b) => a + b, 0) / user.results.length).toFixed(1) : 0;
+    const gameCount = user.gameCount || 0;
+    const testCount = user.results.length;
+    const statsList = [
+      {
+        icon: 'assets/stat_game.png',
+        label: `Время в игре: ${gameTime.toFixed(1)} минут`,
+        progress: Math.min(gameTime / 60 * 100, 100),
+        comment: gameTime > 60 ? 'Бро, ты геймер от бога!' : 'Пора размяться в игре!'
+      },
+      {
+        icon: 'assets/stat_break.png',
+        label: `Перерывы: ${breaks}`,
+        progress: Math.min(breaks / 20 * 100, 100),
+        comment: breaks > 10 ? 'Здоровяк, так держать!' : 'Давай чаще отдыхать!'
+      },
+      {
+        icon: 'assets/stat_break_time.png',
+        label: `Время перерывов: ${breakTime} минут`,
+        progress: Math.min(breakTime / 60 * 100, 100),
+        comment: breakTime > 30 ? 'Чилл-мастер!' : 'Добавь побольше пауз!'
+      },
+      {
+        icon: 'assets/stat_risk.png',
+        label: `Средний риск: ${avgRisk}`,
+        progress: Math.min(avgRisk / 10 * 100, 100),
+        comment: avgRisk > 5 ? 'Бро, пора чилить!' : 'Ты на чиле, продолжай!'
+      },
+      {
+        icon: 'assets/stat_games.png',
+        label: `Игр сыграно: ${gameCount}`,
+        progress: Math.min(gameCount / 50 * 100, 100),
+        comment: gameCount > 20 ? 'Легенда гейминга!' : 'Сыграй ещё, будет весело!'
+      },
+      {
+        icon: 'assets/stat_tests.png',
+        label: `Тестов пройдено: ${testCount}`,
+        progress: Math.min(testCount / 10 * 100, 100),
+        comment: testCount > 5 ? 'Исследователь года!' : 'Пройди ещё тесты!'
+      }
+    ];
+    const sl = document.getElementById('stats');
+    statsList.forEach(s => {
+      const div = document.createElement('div');
+      div.className = 'stat';
+      div.innerHTML = `
+        <img src="${s.icon}" alt="${s.label}">
+        <div>
+          <p>${s.label}</p>
+          <div class="progress-bar"><div style="width: ${s.progress}%"></div></div>
+          <p class="stat-comment">${s.comment}</p>
+        </div>
+      `;
+      sl.appendChild(div);
+    });
+    // Achievements
+    const achievementsList = [
+      { id: 'newbie', name: 'Новичок', icon: 'assets/ach_newbie.gif' },
+      { id: 'sharp_eye', name: 'Зоркий глаз', icon: 'assets/ach_sharp_eye.gif' },
+      { id: 'healthy', name: 'Здоровяк', icon: 'assets/ach_healthy.gif' },
+      { id: 'explorer', name: 'Исследователь', icon: 'assets/ach_explorer.gif' },
+      { id: 'gold', name: 'Золото!', icon: 'assets/ach_gold.gif' }
+    ];
+    const al = document.getElementById('achievements');
+    achievementsList.forEach(a => {
+      const div = document.createElement('div');
+      const isUnlocked = user.achievements && user.achievements.includes(a.id);
+      div.className = 'achievement' + (isUnlocked ? '' : ' locked');
+      if (isUnlocked && !sessionStorage.getItem(`unlocked_${a.id}`)) {
+        div.className += ' unlocked';
+        sessionStorage.setItem(`unlocked_${a.id}`, 'true');
+      }
+      div.innerHTML = `<img src="${a.icon}" alt="${a.name}"> <span>${a.name}</span>`;
+      al.appendChild(div);
+    });
+    // Notification system
+    const adviceList = [
+      'Делайте перерывы каждый час игры для разминки и отдыха.',
+      'Выполняйте гимнастику для глаз: смотрите вдаль, делайте круговые движения.',
+      'Ограничьте время игры до 1–2 часов в день.',
+      'Настройте эргономику: монитор на уровне глаз, кресло с поддержкой спины.',
+      'Обеспечьте равномерное освещение без бликов.',
+      'Добавьте физическую активность: прогулки и упражнения укрепляют здоровье.'
+    ];
+    function showNotification(message) {
+      if(localStorage.getItem('notifications')==='disabled') return;
+      const container = document.getElementById('notification-container');
+      const notif = document.createElement('div');
+      notif.className = 'notification';
+      notif.innerHTML = `<span>${message}</span><button onclick="this.parentElement.remove()">✖</button>`;
+      container.appendChild(notif);
+      setTimeout(() => notif.remove(), 5000);
+    }
+    if (user && user.subscribed) {
+      setInterval(() => {
+        const randomAdvice = adviceList[Math.floor(Math.random() * adviceList.length)];
+        showNotification(`Совет: ${randomAdvice}`);
+      }, 60000);
+    }
+    setTimeout(() => showNotification('Новость: Скоро новый ивент!'), 5000);
+    setTimeout(() => showNotification('ЛС: Привет, как дела?'), 10000);
+    // Logout
+    document.getElementById('logout-btn').onclick=()=>{localStorage.removeItem('currentUser'); location='base.html';};
+  </script>
+</body>
+</html>

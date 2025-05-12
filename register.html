@@ -1,0 +1,41 @@
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Регистрация</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header><h1>ST | Регистрация</h1></header>
+  <div class="auth-container">
+    <h2>Регистрация</h2>
+    <input id="reg-nick" type="text" placeholder="Никнейм"><br>
+    <input id="reg-email" type="email" placeholder="E-mail"><br>
+    <input id="reg-pass" type="password" placeholder="Пароль"><br>
+    <label><input type="checkbox" id="consent"> Согласен на обработку данных</label><br>
+    <button id="reg-btn">Зарегистрироваться</button>
+    <button id="cancel-btn">Назад</button>
+    <p id="reg-msg"></p>
+  </div>
+  <script>
+    document.querySelectorAll('#login-link, #register-link').forEach(el=>el.style.display='none');
+    document.getElementById('reg-btn').onclick=()=>{
+      const nickname=document.getElementById('reg-nick').value;
+      const email=document.getElementById('reg-email').value;
+      const pass=document.getElementById('reg-pass').value;
+      const consent=document.getElementById('consent').checked;
+      if(!consent) return document.getElementById('reg-msg').textContent='Нужно согласие';
+      let users=JSON.parse(localStorage.getItem('users')||'[]');
+      if(users.find(u=>u.email===email||u.nickname===nickname)) return document.getElementById('reg-msg').textContent='Ник или почта заняты';
+      const code=Math.floor(100000+Math.random()*900000);
+      users.push({nickname,email,pass,consent,confirmed:false,subscribed:false,breaks:0,results:[]});
+      localStorage.setItem('users',JSON.stringify(users));
+      localStorage.setItem('pendingEmail',email);
+      localStorage.setItem('confirmCode_'+email,code);
+      alert('Код подтверждения отправлен на '+email+'. Код: '+code);
+      window.location='confirm.html';
+    };
+    document.getElementById('cancel-btn').onclick=()=>location='base.html';
+  </script>
+</body>
+</html>
